@@ -9,12 +9,12 @@
 
 Inspect relationships between napari-plugins in active workflows. Open the inspector by clicking the menu `Tools > Visualization > Workflow Inspector`.
 
-![img_1.png](screenshot_graph.png)
+![img_1.png](https://github.com/haesleinhuepf/napari-workflow-inspector/raw/main/docs/screenshot_graph.png)
 
 Also install the [napari-script-editor](https://www.napari-hub.org/plugins/napari-script-editor) 
 to generate code from active workflows.
 
-![img_2.png](screenshot_script_editor.png)
+![img_2.png](https://github.com/haesleinhuepf/napari-workflow-inspector/raw/main/docs/screenshot_script_editor.png)
 
 
 ----------------------------------
