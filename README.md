@@ -7,19 +7,19 @@
 [![codecov](https://codecov.io/gh/haesleinhuepf/napari-workflow-inspector/branch/main/graph/badge.svg)](https://codecov.io/gh/haesleinhuepf/napari-workflow-inspector)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-workflow-inspector)](https://napari-hub.org/plugins/napari-workflow-inspector)
 
-Inspect relationships between napari-plugins in active workflows
+Inspect relationships between napari-plugins in active workflows. Open the inspector by clicking the menu `Tools > Visualization > Workflow Inspector`.
+
+![img_1.png](screenshot_graph.png)
+
+Also install the [napari-script-editor](https://www.napari-hub.org/plugins/napari-script-editor) 
+to generate code from active workflows.
+
+![img_2.png](screenshot_script_editor.png)
+
 
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
-
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
-
-and review the napari docs for plugin developers:
-https://napari.org/plugins/stable/index.html
--->
 
 ## Installation
 
