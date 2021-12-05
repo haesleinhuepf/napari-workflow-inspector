@@ -33,6 +33,10 @@ class WorkflowWidget(QWidget):
         self._viewer = napari_viewer
 
         igraphwidget = MplCanvas()
+        igraphwidget.axes.clear()
+        igraphwidget.axes.axis('off')
+        igraphwidget.draw()
+
         self.graph_layout = None
         self.idfg_edges = None
         self.idfg_statii = None
@@ -134,7 +138,7 @@ class WorkflowWidget(QWidget):
                                 layout=self.graph_layout)
 
 
-                if not (np.array_equal(self.idfg_edges, np.asarray(self._edges)) and self.idfg_statii == str(self._statii)):
+                if not (np.array_equal(self.idfg_edges, np.asarray(self._edges)) and self.idfg_statii == str(self._statii) and self.idfg_names == str(self._names)):
 
                     if self.graph_layout is None:
                         self.graph_layout = idfg.layout_auto()
@@ -152,9 +156,12 @@ class WorkflowWidget(QWidget):
 
                     self.idfg_edges = np.asarray(self._edges)
                     self.idfg_statii = str(self._statii)
+                    self.idfg_names = str(self._names)
                     igraphwidget.draw()
             else:
                 igraphwidget.axes.clear()
+                igraphwidget.axes.axis('off')
+                igraphwidget.draw()
 
             lbl_from_leafs.setText(html(build_output(workflow.leafs(), workflow.sources_of)))
             lbl_raw.setText(str(workflow))
@@ -224,7 +231,9 @@ class WorkflowWidget(QWidget):
             """).strip()
 
         complete_code = "\n".join(imports) + "\n" + preamble + "\n\n" + "\n".join(code) + "\n"
-        print(complete_code)
+
+        import autopep8
+        complete_code = autopep8.fix_code(complete_code)
 
         import napari_script_editor
         editor = napari_script_editor.ScriptEditor.get_script_editor_from_viewer(self._viewer)
