@@ -16,6 +16,8 @@ to generate code from active workflows.
 
 ![img_2.png](https://github.com/haesleinhuepf/napari-workflow-inspector/raw/main/docs/screenshot_script_editor.png)
 
+For recording workflows, all napari image processing plugins that use the `@time_slicer` interface are supported. See
+[napari-time-slicer](https://www.napari-hub.org/plugins/napari-time-slicer) for a list. More to come, stay tuned.
 
 ----------------------------------
 
