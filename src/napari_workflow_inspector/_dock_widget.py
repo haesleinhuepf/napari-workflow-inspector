@@ -172,68 +172,9 @@ class WorkflowWidget(QWidget):
         self.timer.start()
 
     def _generate_code(self):
-        imports = []
-        code = []
+        from napari_time_slicer._workflow import WorkflowManager
 
-        from napari_time_slicer._workflow import WorkflowManager, _layer_invalid, _viewer_has_layer
-        workflow = WorkflowManager.install(self._viewer).workflow
-        roots = workflow.roots()
-
-        def better_str(value):
-            if isinstance(value, str):
-                value = value.replace("[", "_")\
-                    .replace("]", "_")\
-                    .replace(" ", "_")\
-                    .replace("(", "_")\
-                    .replace(")", "_")\
-                    .replace(".", "_")\
-                    .replace("-", "_")
-                if value[0] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-                    value = "img_" + value
-            return str(value)
-
-        def build_output(list_of_items, func_to_follow):
-            for key in list_of_items:
-                result_name = better_str(key)
-                try:
-                    task = workflow.get_task(key)
-                    print("TASK", task)
-                    function = task[0]
-                    arguments = task[1:]
-                    if arguments[-1] is None:
-                        arguments = arguments[:-1]
-                    new_import = "import " + function.__module__.split(".")[0]
-                    if new_import not in imports:
-                        imports.append(new_import)
-                    arg_str = ", ".join([better_str(a) for a in arguments])
-
-                    code.append("# ## " + function.__name__.replace("_", " "))
-                    code.append(f"{result_name} = {function.__module__}.{function.__name__}({arg_str})")
-                    if _viewer_has_layer(self._viewer, key):
-                        if isinstance(self._viewer.layers[key], napari.layers.Labels):
-                            code.append(f"viewer.add_labels({result_name}, name='{key}')")
-                        else:
-                            code.append(f"viewer.add_image({result_name}, name='{key}')")
-                except KeyError:
-                    code.append(f"{result_name} = viewer.layers['{key}'].data")
-                code.append("")
-                build_output(func_to_follow(key), func_to_follow)
-
-
-        build_output(workflow.roots(), workflow.followers_of)
-        from textwrap import dedent
-
-        preamble = dedent("""
-            import napari
-
-            if 'viewer' not in globals():
-                viewer = napari.Viewer()
-            """).strip()
-
-        complete_code = "\n".join(imports) + "\n" + preamble + "\n\n" + "\n".join(code) + "\n"
-
-        import autopep8
-        complete_code = autopep8.fix_code(complete_code)
+        complete_code = WorkflowManager.install(self._viewer).to_python_code()
 
         import napari_script_editor
         editor = napari_script_editor.ScriptEditor.get_script_editor_from_viewer(self._viewer)
