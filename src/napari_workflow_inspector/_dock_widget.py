@@ -3,12 +3,9 @@ from napari_plugin_engine import napari_hook_implementation
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QLayout, QLabel, QTabWidget, QScrollArea
 from qtpy.QtWidgets import QSpacerItem, QSizePolicy
 from qtpy.QtCore import QTimer, Qt
-from magicgui import magic_factory
 from napari_tools_menu import register_dock_widget
-import napari
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -73,7 +70,8 @@ class WorkflowWidget(QWidget):
 
         @self.timer.timeout.connect
         def update_layer(*_):
-            from napari_time_slicer._workflow import WorkflowManager, _layer_invalid, _viewer_has_layer
+            from napari_workflows import WorkflowManager
+            from napari_workflows._workflow import _layer_invalid, _viewer_has_layer
             workflow = WorkflowManager.install(napari_viewer).workflow
             roots = workflow.roots()
 
@@ -172,7 +170,7 @@ class WorkflowWidget(QWidget):
         self.timer.start()
 
     def _generate_code(self):
-        from napari_time_slicer._workflow import WorkflowManager
+        from napari_workflows import WorkflowManager
 
         complete_code = WorkflowManager.install(self._viewer).to_python_code()
 
