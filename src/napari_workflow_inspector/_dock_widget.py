@@ -25,7 +25,7 @@ class MplCanvas(FigureCanvas):
 @register_dock_widget(menu="Visualization > Workflow Inspector")
 class WorkflowWidget(QWidget):
 
-    def __init__(self, napari_viewer):
+    def __init__(self, napari_viewer, _for_testing:bool = False):
         super().__init__()
         self._viewer = napari_viewer
 
@@ -116,7 +116,10 @@ class WorkflowWidget(QWidget):
             def html(text):
                 return "<html><pre>" + text + "</pre></html>"
 
-            lbl_from_roots.setText(html(build_output(workflow.roots(), workflow.followers_of)))
+            try:
+                lbl_from_roots.setText(html(build_output(workflow.roots(), workflow.followers_of)))
+            except RuntimeError:
+                pass
 
             if len(self._edges) > 0:
 
@@ -159,15 +162,23 @@ class WorkflowWidget(QWidget):
             else:
                 igraphwidget.axes.clear()
                 igraphwidget.axes.axis('off')
-                igraphwidget.draw()
+                try:
+                    igraphwidget.draw()
+                except RuntimeError:
+                    pass
 
-            lbl_from_leafs.setText(html(build_output(workflow.leafs(), workflow.sources_of)))
-            lbl_raw.setText(str(workflow))
-            lbl_raw.setMinimumSize(1000, 1000)
-            lbl_raw.setAlignment(Qt.AlignTop)
+            try:
+                lbl_from_leafs.setText(html(build_output(workflow.leafs(), workflow.sources_of)))
+                lbl_raw.setText(str(workflow))
+                lbl_raw.setMinimumSize(1000, 1000)
+                lbl_raw.setAlignment(Qt.AlignTop)
+            except RuntimeError:
+                pass
 
-
-        self.timer.start()
+        if not _for_testing:
+            self.timer.start()
+        else:
+            update_layer()
 
     def _generate_code(self):
         from napari_workflows import WorkflowManager
