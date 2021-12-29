@@ -5,6 +5,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-workflow-inspector.svg?color=green)](https://python.org)
 [![tests](https://github.com/haesleinhuepf/napari-workflow-inspector/workflows/tests/badge.svg)](https://github.com/haesleinhuepf/napari-workflow-inspector/actions)
 [![codecov](https://codecov.io/gh/haesleinhuepf/napari-workflow-inspector/branch/main/graph/badge.svg)](https://codecov.io/gh/haesleinhuepf/napari-workflow-inspector)
+[![Development Status](https://img.shields.io/pypi/status/napari-workflow-inspector.svg)](https://en.wikipedia.org/wiki/Software_release_life_cycle#Alpha)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-workflow-inspector)](https://napari-hub.org/plugins/napari-workflow-inspector)
 
 Inspect relationships between napari-plugins in active workflows. Open the inspector by clicking the menu `Tools > Visualization > Workflow Inspector`.
