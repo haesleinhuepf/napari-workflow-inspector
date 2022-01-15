@@ -26,16 +26,20 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
 
 ## Installation
 
-You can install `napari-workflow-inspector` via [pip]:
+Before installation, you may have to install the [cairo library](https://www.cairographics.org/) which is needed
+according to the installation instructions of the underlying [igraph library](https://igraph.org/python/doc/tutorial/install.html). 
+You can for example do that by downloading a wheel from [Christoph Gohlke's Website](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo) 
+and then running this command:
 
-    pip install napari-workflow-inspector
+```
+pip install pycairo-1.20.1-cp39-cp39-win_amd64.whl
+```
 
+Then, you can install `napari-workflow-inspector` via [pip]:
 
-
-To install latest development version :
-
-    pip install git+https://github.com/haesleinhuepf/napari-workflow-inspector.git
-
+```
+pip install napari-workflow-inspector
+```
 
 ## Contributing
 
