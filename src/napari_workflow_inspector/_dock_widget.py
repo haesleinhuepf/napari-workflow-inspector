@@ -33,10 +33,10 @@ class WorkflowWidget(QWidget):
         super().__init__()
         self._viewer = napari_viewer
 
-        igraphwidget = MplCanvas()
-        igraphwidget.axes.clear()
-        igraphwidget.axes.axis('off')
-        igraphwidget.draw()
+        self.graphwidget = MplCanvas()
+        self.graphwidget.axes.clear()
+        self.graphwidget.axes.axis('off')
+        self.graphwidget.draw()
 
         self.graph_layout = None
         self.idfg_edges = None
@@ -49,7 +49,7 @@ class WorkflowWidget(QWidget):
         scroll_area_raw.setWidget(lbl_raw)
 
         tabs = QTabWidget()
-        tabs.addTab(igraphwidget, "Image data flow graph")
+        tabs.addTab(self.graphwidget, "Image data flow graph")
         tabs.addTab(lbl_from_roots, "From source")
         tabs.addTab(lbl_from_leafs, "From target")
         tabs.addTab(scroll_area_raw, "Raw")
@@ -75,11 +75,6 @@ class WorkflowWidget(QWidget):
 
         self.timer = QTimer()
         self.timer.setInterval(200)
-
-
-
-
-
 
 
         @self.timer.timeout.connect
@@ -134,46 +129,50 @@ class WorkflowWidget(QWidget):
 
             if len(self._edges) > 0:
 
-                import igraph
-                idfg = igraph.Graph(self._edges)
-
-                def redraw():
-                    igraph.plot(idfg,
-                                target=igraphwidget.axes,
-                                vertex_label=["   " + name for name in self._names],
-                                vertex_color=self._statii,
-                                vertex_label_color = self._statii,
-                                vertex_size = 10,
-                                vertex_label_dist = 10,
-                                vertex_label_size = 10,
-                                edge_color = "#dddddd",
-                                layout=self.graph_layout)
+                G = self._create_nx_graph_from_workflow(workflow)
+                self._draw_nx_graph(G)
 
 
-                if not (np.array_equal(self.idfg_edges, np.asarray(self._edges)) and self.idfg_statii == str(self._statii) and self.idfg_names == str(self._names)):
+                # import igraph
+                # idfg = igraph.Graph(self._edges)
 
-                    if self.graph_layout is None:
-                        self.graph_layout = idfg.layout_auto()
+                # def redraw():
+                #     igraph.plot(idfg,
+                #                 target=graphwidget.axes,
+                #                 vertex_label=["   " + name for name in self._names],
+                #                 vertex_color=self._statii,
+                #                 vertex_label_color = self._statii,
+                #                 vertex_size = 10,
+                #                 vertex_label_dist = 10,
+                #                 vertex_label_size = 10,
+                #                 edge_color = "#dddddd",
+                #                 layout=self.graph_layout)
 
-                    # workaround as vertex_label_color above doesn't work :-(
-                    matplotlib.rcParams['text.color'] = '#dddddd'
 
-                    igraphwidget.axes.clear()
-                    igraphwidget.axes.axis('off')
+                # if not (np.array_equal(self.idfg_edges, np.asarray(self._edges)) and self.idfg_statii == str(self._statii) and self.idfg_names == str(self._names)):
 
-                    if not np.array_equal(self.idfg_edges, np.asarray(self._edges)):
-                        self.graph_layout = idfg.layout_auto()
+                #     if self.graph_layout is None:
+                #         self.graph_layout = idfg.layout_auto()
 
-                    redraw()
+                #     # workaround as vertex_label_color above doesn't work :-(
+                #     matplotlib.rcParams['text.color'] = '#dddddd'
 
-                    self.idfg_edges = np.asarray(self._edges)
-                    self.idfg_statii = str(self._statii)
-                    self.idfg_names = str(self._names)
-                    igraphwidget.draw()
+                #     graphwidget.axes.clear()
+                #     graphwidget.axes.axis('off')
+
+                #     if not np.array_equal(self.idfg_edges, np.asarray(self._edges)):
+                #         self.graph_layout = idfg.layout_auto()
+
+                #     redraw()
+
+                #     self.idfg_edges = np.asarray(self._edges)
+                #     self.idfg_statii = str(self._statii)
+                #     self.idfg_names = str(self._names)
+                #     graphwidget.draw()
             else:
-                igraphwidget.axes.clear()
-                igraphwidget.axes.axis('off')
-                igraphwidget.draw()
+                self.graphwidget.axes.clear()
+                self.graphwidget.axes.axis('off')
+                self.graphwidget.draw()
 
             lbl_from_leafs.setText(html(build_output(workflow.leafs(), workflow.sources_of)))
             lbl_raw.setText(str(workflow))
@@ -207,18 +206,17 @@ class WorkflowWidget(QWidget):
         editor = napari_script_editor.ScriptEditor.get_script_editor_from_viewer(self._viewer)
         editor.set_code(complete_code)
 
-    def _create_nx_graph_from_workflow(workflow):
+    def _create_nx_graph_from_workflow(self, workflow):
         """Consume a workflow object and return an directed nx graph"""
         G = nx.DiGraph()
 
-        # add all immages as nodes
+        # add all images as nodes
         for key in workflow._tasks.keys():
             G.add_node(key)
 
         # Traverse workflow and connect nodes
         nodes = workflow.roots()
         for node in nodes:
-            print('Checking', node)
 
             followers = workflow.followers_of(node)
 
@@ -228,8 +226,11 @@ class WorkflowWidget(QWidget):
 
         return G
 
-    def _draw_nx_graph(G, ax):
-        nx.draw_kamada_kawai(G, ax=ax)
+    def _draw_nx_graph(self, G):
+
+        self.graphwidget.axes.clear()
+        nx.draw_kamada_kawai(G, ax=self.graphwidget.axes)
+        self.graphwidget.draw()
 
 
 
