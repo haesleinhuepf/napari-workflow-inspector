@@ -1,6 +1,7 @@
 import numpy as np
 from napari_plugin_engine import napari_hook_implementation
 from qtpy.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QLayout, QLabel, QTabWidget, QScrollArea
+from qtpy.QtWidgets import QFileDialog
 from qtpy.QtWidgets import QSpacerItem, QSizePolicy
 from qtpy.QtCore import QTimer, Qt
 from napari_tools_menu import register_dock_widget
@@ -9,6 +10,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib
 matplotlib.use('Qt5Agg')
+
+import pickle
+import networkx as nx
 
 # Adapted from https://github.com/BiAPoL/napari-clusters-plotter/blob/main/napari_clusters_plotter/_plotter.py
 class MplCanvas(FigureCanvas):
@@ -56,8 +60,12 @@ class WorkflowWidget(QWidget):
         try:
             import napari_script_editor
             btn_generate_code = QPushButton("Generate code")
+            btn_export_workflow = QPushButton("Export workflow")
+
             btn_generate_code.clicked.connect(self._generate_code)
+            btn_export_workflow.clicked.connect(self._export_code)
             self.layout().addWidget(btn_generate_code)
+            self.layout().addWidget(btn_export_workflow)
         except ImportError:
             pass
 
@@ -67,6 +75,12 @@ class WorkflowWidget(QWidget):
 
         self.timer = QTimer()
         self.timer.setInterval(200)
+
+
+
+
+
+
 
         @self.timer.timeout.connect
         def update_layer(*_):
@@ -169,14 +183,53 @@ class WorkflowWidget(QWidget):
 
         self.timer.start()
 
+    def _export_code(self):
+
+        fileName, _ = QFileDialog.getSaveFileName(self)
+
+        graph = {
+            'counter': self._counter,
+            'edges': self._edges,
+            'names': self._names,
+            'statii': self._statii}
+
+        with open(fileName, 'wb') as pickleobj:
+            pickle.dump(pickleobj, fileName)
+
     def _generate_code(self):
         from napari_workflows import WorkflowManager
 
         complete_code = WorkflowManager.install(self._viewer).to_python_code()
 
+        print(complete_code)
+
         import napari_script_editor
         editor = napari_script_editor.ScriptEditor.get_script_editor_from_viewer(self._viewer)
         editor.set_code(complete_code)
+
+    def _create_nx_graph_from_workflow(workflow):
+        """Consume a workflow object and return an directed nx graph"""
+        G = nx.DiGraph()
+
+        # add all immages as nodes
+        for key in workflow._tasks.keys():
+            G.add_node(key)
+
+        # Traverse workflow and connect nodes
+        nodes = workflow.roots()
+        for node in nodes:
+            print('Checking', node)
+
+            followers = workflow.followers_of(node)
+
+            for follower in followers:
+                G.add_edge(node, follower)
+                nodes.append(follower)
+
+        return G
+
+    def _draw_nx_graph(G, ax):
+        nx.draw_kamada_kawai(G, ax=ax)
 
 
 
