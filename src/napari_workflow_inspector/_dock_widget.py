@@ -7,6 +7,7 @@ from qtpy.QtCore import QTimer, Qt
 from napari_tools_menu import register_dock_widget
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -14,17 +15,41 @@ matplotlib.use('Qt5Agg')
 import pickle
 import networkx as nx
 
-# Adapted from https://github.com/BiAPoL/napari-clusters-plotter/blob/main/napari_clusters_plotter/_plotter.py
+
+# Adapted from https://github.com/jo-mueller/RadiAiDD/blob/master/RadiAIDD/Backend/UI/_matplotlibwidgetFile.py
 class MplCanvas(FigureCanvas):
+    """
+    Defines the canvas of the matplotlib window
+    """
 
-    def __init__(self, parent=None, width=7, height=4):
-        self.fig = Figure(figsize=(width, height))
-
-        # changing color of axis background to napari main window color
+    def __init__(self):
+        self.fig = Figure()                         # create figure
+        self.axes = self.fig.add_subplot(111)       # create subplot
+        self.fig.subplots_adjust(left=0.04, bottom=0.04, right=0.97,
+                                 top=0.96,  wspace=None, hspace=None)
         self.fig.patch.set_facecolor('#262930')
-        self.axes = self.fig.add_subplot(111)
 
-        super(MplCanvas, self).__init__(self.fig)
+        FigureCanvas.__init__(self, self.fig)  # initialize canvas
+        FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding,
+                                   QSizePolicy.Expanding)
+        FigureCanvas.updateGeometry(self)
+
+
+class matplotlibWidget(QWidget):
+    """
+    The matplotlibWidget class based on QWidget
+    """
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        # save canvas and toolbar
+        self.canvas = MplCanvas()
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        # set layout and add them to widget
+        self.vbl = QVBoxLayout()
+        self.vbl.addWidget(self.toolbar)
+        self.vbl.addWidget(self.canvas)
+        self.setLayout(self.vbl)
 
 @register_dock_widget(menu="Visualization > Workflow Inspector")
 class WorkflowWidget(QWidget):
@@ -33,10 +58,10 @@ class WorkflowWidget(QWidget):
         super().__init__()
         self._viewer = napari_viewer
 
-        self.graphwidget = MplCanvas()
-        self.graphwidget.axes.clear()
-        self.graphwidget.axes.axis('off')
-        self.graphwidget.draw()
+        self.graphwidget = matplotlibWidget()
+
+
+        self.graph = nx.DiGraph()
 
         self.graph_layout = None
         self.idfg_edges = None
@@ -127,52 +152,13 @@ class WorkflowWidget(QWidget):
 
             lbl_from_roots.setText(html(build_output(workflow.roots(), workflow.followers_of)))
 
-            if len(self._edges) > 0:
+            new_graph = self._create_nx_graph_from_workflow(workflow)
 
-                G = self._create_nx_graph_from_workflow(workflow)
-                self._draw_nx_graph(G)
+            # replace old graph instance only when number of nodes has changed
+            if len(new_graph.nodes) > len(self.graph.nodes):
 
-
-                # import igraph
-                # idfg = igraph.Graph(self._edges)
-
-                # def redraw():
-                #     igraph.plot(idfg,
-                #                 target=graphwidget.axes,
-                #                 vertex_label=["   " + name for name in self._names],
-                #                 vertex_color=self._statii,
-                #                 vertex_label_color = self._statii,
-                #                 vertex_size = 10,
-                #                 vertex_label_dist = 10,
-                #                 vertex_label_size = 10,
-                #                 edge_color = "#dddddd",
-                #                 layout=self.graph_layout)
-
-
-                # if not (np.array_equal(self.idfg_edges, np.asarray(self._edges)) and self.idfg_statii == str(self._statii) and self.idfg_names == str(self._names)):
-
-                #     if self.graph_layout is None:
-                #         self.graph_layout = idfg.layout_auto()
-
-                #     # workaround as vertex_label_color above doesn't work :-(
-                #     matplotlib.rcParams['text.color'] = '#dddddd'
-
-                #     graphwidget.axes.clear()
-                #     graphwidget.axes.axis('off')
-
-                #     if not np.array_equal(self.idfg_edges, np.asarray(self._edges)):
-                #         self.graph_layout = idfg.layout_auto()
-
-                #     redraw()
-
-                #     self.idfg_edges = np.asarray(self._edges)
-                #     self.idfg_statii = str(self._statii)
-                #     self.idfg_names = str(self._names)
-                #     graphwidget.draw()
-            else:
-                self.graphwidget.axes.clear()
-                self.graphwidget.axes.axis('off')
-                self.graphwidget.draw()
+                self.graph = new_graph
+                self._draw_nx_graph(self.graph)
 
             lbl_from_leafs.setText(html(build_output(workflow.leafs(), workflow.sources_of)))
             lbl_raw.setText(str(workflow))
@@ -228,10 +214,19 @@ class WorkflowWidget(QWidget):
 
     def _draw_nx_graph(self, G):
 
-        self.graphwidget.axes.clear()
-        nx.draw_kamada_kawai(G, ax=self.graphwidget.axes)
-        self.graphwidget.draw()
+        ax = self.graphwidget.canvas.axes
+        ax.clear()
 
+        graph_layout = nx.drawing.layout.kamada_kawai_layout
+
+        nx.draw_kamada_kawai(G, ax=ax)
+        nx.draw_networkx_labels(G, pos=graph_layout(G), ax=ax)
+        # nx.draw_kamada_kawai(G, ax=self.graphwidget.axes)
+        self.graphwidget.canvas.draw()
+
+    def _prep_canvas(self):
+        canvas = self.graphwidget.canvas
+        canvas.axes.set_facecolor("#262930")
 
 
 @napari_hook_implementation
