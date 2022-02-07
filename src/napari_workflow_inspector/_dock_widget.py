@@ -154,8 +154,8 @@ class WorkflowWidget(QWidget):
 
             new_graph = self._create_nx_graph_from_workflow(workflow)
 
-            # replace old graph instance only when number of nodes has changed
-            if len(new_graph.nodes) > len(self.graph.nodes):
+            # replace old graph instance only when nodes or edges have changed
+            if new_graph.nodes != self.graph.nodes or new_graph.edges != self.graph.edges:
 
                 self.graph = new_graph
                 self._draw_nx_graph(self.graph)
