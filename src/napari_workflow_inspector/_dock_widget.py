@@ -27,7 +27,9 @@ class MplCanvas(FigureCanvas):
         self.axes = self.fig.add_subplot(111)       # create subplot
         self.fig.subplots_adjust(left=0.04, bottom=0.04, right=0.97,
                                  top=0.96,  wspace=None, hspace=None)
+
         self.fig.patch.set_facecolor('#262930')
+        self.axes.set_facecolor('#262930')
 
         FigureCanvas.__init__(self, self.fig)  # initialize canvas
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding,
@@ -217,16 +219,18 @@ class WorkflowWidget(QWidget):
         ax = self.graphwidget.canvas.axes
         ax.clear()
 
-        graph_layout = nx.drawing.layout.kamada_kawai_layout
+        # get positions and offset a bit for visibility
+        positions = nx.drawing.layout.kamada_kawai_layout(G)
 
-        nx.draw_kamada_kawai(G, ax=ax)
-        nx.draw_networkx_labels(G, pos=graph_layout(G), ax=ax)
-        # nx.draw_kamada_kawai(G, ax=self.graphwidget.axes)
+        nx.draw_kamada_kawai(G, ax=ax, edge_color='black', arrowsize=20)
+        nx.draw_networkx_labels(G, pos=positions, ax=ax,
+                                font_color='black', horizontalalignment='left',
+                                verticalalignment='bottom',
+                                bbox=dict(edgecolor='black', facecolor='white', alpha=0.5),
+                                clip_on=False)
+
+        ax.set_facecolor('#262930')
         self.graphwidget.canvas.draw()
-
-    def _prep_canvas(self):
-        canvas = self.graphwidget.canvas
-        canvas.axes.set_facecolor("#262930")
 
 
 @napari_hook_implementation
