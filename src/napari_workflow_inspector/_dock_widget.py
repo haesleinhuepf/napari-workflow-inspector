@@ -16,6 +16,8 @@ import pickle
 import networkx as nx
 
 
+
+
 # Adapted from https://github.com/jo-mueller/RadiAiDD/blob/master/RadiAIDD/Backend/UI/_matplotlibwidgetFile.py
 class MplCanvas(FigureCanvas):
     """
@@ -219,10 +221,10 @@ class WorkflowWidget(QWidget):
         ax = self.graphwidget.canvas.axes
         ax.clear()
 
-        # get positions and offset a bit for visibility
+        # get positions for drawing
         positions = nx.drawing.layout.kamada_kawai_layout(G)
 
-        nx.draw_kamada_kawai(G, ax=ax, edge_color='black', arrowsize=20)
+        nx.draw(G, pos=positions, ax=ax, edge_color='black', arrowsize=20)
         nx.draw_networkx_labels(G, pos=positions, ax=ax,
                                 font_color='black', horizontalalignment='left',
                                 verticalalignment='bottom',
