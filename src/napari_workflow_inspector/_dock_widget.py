@@ -16,6 +16,77 @@ import pickle
 import networkx as nx
 
 
+# From https://stackoverflow.com/questions/28001655/draggable-line-with-draggable-points
+class ClickableNodes():
+
+    def __init__(self, canvas, positions, radius=100, transparent=False):
+
+        self.fc_pending =[1, 0.5, 0, 1]
+        self.fc_uptodate = [0, 0, 1, 1]
+        self.ec_inactive = None
+        self.ec_active = [1, 1, 1, 1]
+        
+        self.positions = positions
+        self.x = [positions[key][0] for key in positions.keys()]
+        self.y = [positions[key][1] for key in positions.keys()]
+        
+        self.canvas = canvas
+        self.points = self.canvas.axes.scatter(self.x, self.y, picker=True, s=radius,
+                                               facecolor=[self.fc_uptodate] * len(self.x),
+                                               edgecolor=[self.fc_uptodate] * len(self.x))
+        
+        self.facecolors = self.points.get_facecolors()
+        self.edgecolors = self.points.get_edgecolors()
+        self.background = None
+        
+        self.canvas.mpl_connect('pick_event', self.on_pick)
+
+    def toggle(self, index):
+        """Turn this point on and off"""
+        
+        edgecolors = self.edgecolors.copy()
+        edgecolors[index] = self.ec_active
+        self.points.set_edgecolors(edgecolors)            
+        self.canvas.draw()
+
+    def on_pick(self, event):
+        self.toggle(event.ind)
+        
+
+        # # If click is outside point: Inactivate point
+        # if event.inaxes != self.point.axes:
+        #     self.toggle()
+        #     return
+
+        # contains, attrd = self.point.contains(event)
+        # if not contains:
+        #     return
+        # self.press = (self.point.center), event.xdata, event.ydata
+
+        # # draw everything but the selected rectangle and store the pixel buffer
+        # canvas = self.point.figure.canvas
+        # axes = self.point.axes
+        # self.point.set_animated(True)
+        
+        # self.point.set(edgecolor='black')
+        # self.point.is_clicked =True
+
+        # canvas.draw()
+        # self.background = canvas.copy_from_bbox(self.point.axes.bbox)
+
+        # # now redraw just the rectangle
+        # axes.draw_artist(self.point)
+
+        # # and blit just the redrawn area
+        # canvas.blit(axes.bbox)
+        
+        # print('I was clicked')
+
+
+    def disconnect(self):
+        'disconnect all the stored connection ids'
+
+        self.point.figure.canvas.mpl_disconnect(self.cidpress)
 
 
 # Adapted from https://github.com/jo-mueller/RadiAiDD/blob/master/RadiAIDD/Backend/UI/_matplotlibwidgetFile.py
@@ -63,8 +134,6 @@ class WorkflowWidget(QWidget):
         self._viewer = napari_viewer
 
         self.graphwidget = matplotlibWidget()
-
-
         self.graph = nx.DiGraph()
 
         self.graph_layout = None
@@ -222,17 +291,20 @@ class WorkflowWidget(QWidget):
         ax.clear()
 
         # get positions for drawing
-        positions = nx.drawing.layout.kamada_kawai_layout(G)
-
-        nx.draw(G, pos=positions, ax=ax, edge_color='black', arrowsize=20)
-        nx.draw_networkx_labels(G, pos=positions, ax=ax,
-                                font_color='black', horizontalalignment='left',
-                                verticalalignment='bottom',
-                                bbox=dict(edgecolor='black', facecolor='white', alpha=0.5),
-                                clip_on=False)
-
+        self.positions = nx.drawing.layout.kamada_kawai_layout(G)
+        
+        nx.draw_networkx_edges(G, pos=self.positions, ax=self.graphwidget.canvas.axes)
+        self.points = ClickableNodes(self.graphwidget.canvas, self.positions)
+        
+        props = dict(boxstyle='round', facecolor='white', alpha=0.2)
+        nx.draw_networkx_labels(G, pos=self.positions, ax=self.graphwidget.canvas.axes,
+                                font_color='white', bbox=props,
+                                verticalalignment='bottom')
+        
         ax.set_facecolor('#262930')
         self.graphwidget.canvas.draw()
+
+        
 
 
 @napari_hook_implementation
