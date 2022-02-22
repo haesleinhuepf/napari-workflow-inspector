@@ -23,7 +23,7 @@ class ClickableNodes():
 
         self.fc_pending =[1, 0.5, 0, 1]
         self.fc_uptodate = [0, 0, 1, 1]
-        self.ec_inactive = None
+        self.ec_inactive = [0, 0, 0, 1]
         self.ec_active = [1, 1, 1, 1]
         
         self.positions = positions
@@ -33,9 +33,8 @@ class ClickableNodes():
         self.canvas = canvas
         self.points = self.canvas.axes.scatter(self.x, self.y, picker=True, s=radius,
                                                facecolor=[self.fc_uptodate] * len(self.x),
-                                               edgecolor=[self.fc_uptodate] * len(self.x))
+                                               edgecolor=[self.ec_inactive] * len(self.x))
         
-        self.facecolors = self.points.get_facecolors()
         self.edgecolors = self.points.get_edgecolors()
         self.background = None
         
@@ -52,37 +51,20 @@ class ClickableNodes():
     def on_pick(self, event):
         self.toggle(event.ind)
         
-
-        # # If click is outside point: Inactivate point
-        # if event.inaxes != self.point.axes:
-        #     self.toggle()
-        #     return
-
-        # contains, attrd = self.point.contains(event)
-        # if not contains:
-        #     return
-        # self.press = (self.point.center), event.xdata, event.ydata
-
-        # # draw everything but the selected rectangle and store the pixel buffer
-        # canvas = self.point.figure.canvas
-        # axes = self.point.axes
-        # self.point.set_animated(True)
-        
-        # self.point.set(edgecolor='black')
-        # self.point.is_clicked =True
-
-        # canvas.draw()
-        # self.background = canvas.copy_from_bbox(self.point.axes.bbox)
-
-        # # now redraw just the rectangle
-        # axes.draw_artist(self.point)
-
-        # # and blit just the redrawn area
-        # canvas.blit(axes.bbox)
-        
-        # print('I was clicked')
-
-
+    def validate(self, node_name, state):
+        for idx, key in enumerate(self.positions.keys()):
+            if key == node_name:
+                facecolors = self.points.get_facecolors()
+                
+                if state == 'invalid':
+                    facecolors[idx] = self.fc_pending
+                elif state == 'valid':
+                    facecolors[idx] = self.fc_uptodate
+                    
+                self.points.set_facecolors(facecolors)
+                self.canvas.draw()
+                
+            
     def disconnect(self):
         'disconnect all the stored connection ids'
 
@@ -226,12 +208,13 @@ class WorkflowWidget(QWidget):
             lbl_from_roots.setText(html(build_output(workflow.roots(), workflow.followers_of)))
 
             new_graph = self._create_nx_graph_from_workflow(workflow)
-
             # replace old graph instance only when nodes or edges have changed
             if new_graph.nodes != self.graph.nodes or new_graph.edges != self.graph.edges:
 
                 self.graph = new_graph
                 self._draw_nx_graph(self.graph)
+                
+            self._update_nx_graph()
 
             lbl_from_leafs.setText(html(build_output(workflow.leafs(), workflow.sources_of)))
             lbl_raw.setText(str(workflow))
@@ -294,7 +277,7 @@ class WorkflowWidget(QWidget):
         self.positions = nx.drawing.layout.kamada_kawai_layout(G)
         
         nx.draw_networkx_edges(G, pos=self.positions, ax=self.graphwidget.canvas.axes)
-        self.points = ClickableNodes(self.graphwidget.canvas, self.positions)
+        self.graph_drawing = ClickableNodes(self.graphwidget.canvas, self.positions)
         
         props = dict(boxstyle='round', facecolor='white', alpha=0.2)
         nx.draw_networkx_labels(G, pos=self.positions, ax=self.graphwidget.canvas.axes,
@@ -303,8 +286,18 @@ class WorkflowWidget(QWidget):
         
         ax.set_facecolor('#262930')
         self.graphwidget.canvas.draw()
-
         
+    def _update_nx_graph(self):
+        "Check if layers are valid and changes points accordingly."
+        from napari_workflows._workflow import _layer_invalid, _viewer_has_layer
+        
+        for node in self.graph.nodes:
+            if _viewer_has_layer(self._viewer, node):
+                layer = self._viewer.layers[node]
+                if _layer_invalid(layer):
+                    self.graph_drawing.validate(node, state='invalid')
+                else:
+                    self.graph_drawing.validate(node, state='valid')
 
 
 @napari_hook_implementation
