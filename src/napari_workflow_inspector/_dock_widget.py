@@ -19,12 +19,13 @@ import networkx as nx
 # From https://stackoverflow.com/questions/28001655/draggable-line-with-draggable-points
 class ClickableNodes():
 
-    def __init__(self, canvas, positions, radius=100, transparent=False):
+    def __init__(self, canvas, positions, viewer, radius=200, transparent=False):
 
-        self.fc_pending =[1, 0.5, 0, 1]
-        self.fc_uptodate = [0, 0, 1, 1]
+        self.fc_pending = [1, 0.5, 0.3, 1]
+        self.fc_uptodate = [0, 1, 1, 1]
         self.ec_inactive = [0, 0, 0, 1]
         self.ec_active = [1, 1, 1, 1]
+        self.viewer = viewer
         
         self.positions = positions
         self.x = [positions[key][0] for key in positions.keys()]
@@ -45,8 +46,16 @@ class ClickableNodes():
         
         edgecolors = self.edgecolors.copy()
         edgecolors[index] = self.ec_active
-        self.points.set_edgecolors(edgecolors)            
+        self.points.set_edgecolors(edgecolors)
         self.canvas.draw()
+        
+        keys = list(self.positions.keys())
+        index = index[0]
+        if keys[index] in self.viewer.layers:
+            layer = self.viewer.layers[keys[index]]
+            self.viewer.layers.selection = {layer}
+        
+        self.viewer.selection = {}
 
     def on_pick(self, event):
         self.toggle(event.ind)
@@ -276,8 +285,10 @@ class WorkflowWidget(QWidget):
         # get positions for drawing
         self.positions = nx.drawing.layout.kamada_kawai_layout(G)
         
-        nx.draw_networkx_edges(G, pos=self.positions, ax=self.graphwidget.canvas.axes)
-        self.graph_drawing = ClickableNodes(self.graphwidget.canvas, self.positions)
+        nx.draw_networkx_edges(G, pos=self.positions, ax=self.graphwidget.canvas.axes,
+                               width=2, edge_color=[0.8, 0.8, 0.8, 1])
+        self.graph_drawing = ClickableNodes(self.graphwidget.canvas, self.positions,
+                                            self._viewer)
         
         props = dict(boxstyle='round', facecolor='white', alpha=0.2)
         nx.draw_networkx_labels(G, pos=self.positions, ax=self.graphwidget.canvas.axes,
