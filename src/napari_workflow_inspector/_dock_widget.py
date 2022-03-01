@@ -54,8 +54,6 @@ class ClickableNodes():
         if keys[index] in self.viewer.layers:
             layer = self.viewer.layers[keys[index]]
             self.viewer.layers.selection = {layer}
-        
-        self.viewer.selection = {}
 
     def on_pick(self, event):
         self.toggle(event.ind)
@@ -286,7 +284,7 @@ class WorkflowWidget(QWidget):
         self.positions = nx.drawing.layout.kamada_kawai_layout(G)
         
         nx.draw_networkx_edges(G, pos=self.positions, ax=self.graphwidget.canvas.axes,
-                               width=2, edge_color=[0.8, 0.8, 0.8, 1])
+                               width=2, edge_color='white')
         self.graph_drawing = ClickableNodes(self.graphwidget.canvas, self.positions,
                                             self._viewer)
         
