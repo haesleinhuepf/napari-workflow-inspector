@@ -21,8 +21,8 @@ class ClickableNodes():
 
     def __init__(self, canvas, positions, viewer, radius=200, transparent=False):
 
-        self.fc_pending = [1, 0.5, 0.3, 1]
-        self.fc_uptodate = [0, 1, 1, 1]
+        self.invalid_color = [1, 0, 1, 1]
+        self.valid_color = [0, 1, 0, 1]
         self.ec_inactive = [0, 0, 0, 1]
         self.ec_active = [1, 1, 1, 1]
         self.viewer = viewer
@@ -33,7 +33,7 @@ class ClickableNodes():
         
         self.canvas = canvas
         self.points = self.canvas.axes.scatter(self.x, self.y, picker=True, s=radius,
-                                               facecolor=[self.fc_uptodate] * len(self.x),
+                                               facecolor=[self.valid_color] * len(self.x),
                                                edgecolor=[self.ec_inactive] * len(self.x))
         
         self.edgecolors = self.points.get_edgecolors()
@@ -64,9 +64,9 @@ class ClickableNodes():
                 facecolors = self.points.get_facecolors()
                 
                 if state == 'invalid':
-                    facecolors[idx] = self.fc_pending
+                    facecolors[idx] = self.invalid_color
                 elif state == 'valid':
-                    facecolors[idx] = self.fc_uptodate
+                    facecolors[idx] = self.valid_color
                     
                 self.points.set_facecolors(facecolors)
                 self.canvas.draw()
