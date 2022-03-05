@@ -110,10 +110,9 @@ class matplotlibWidget(QWidget):
         self.canvas = MplCanvas()
         self.toolbar = NavigationToolbar(self.canvas, self)
         # set layout and add them to widget
-        self.vbl = QVBoxLayout()
-        self.vbl.addWidget(self.toolbar)
-        self.vbl.addWidget(self.canvas)
-        self.setLayout(self.vbl)
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.toolbar)
+        self.layout().addWidget(self.canvas)
 
 @register_dock_widget(menu="Visualization > Workflow Inspector")
 class WorkflowWidget(QWidget):
@@ -221,11 +220,11 @@ class WorkflowWidget(QWidget):
 
     def _create_nx_graph_from_workflow(self, workflow):
         """Consume a workflow object and return an directed nx graph"""
-        G = nx.DiGraph()
+        graph = nx.DiGraph()
 
         # add all images as nodes
         for key in workflow._tasks.keys():
-            G.add_node(key)
+            graph.add_node(key)
 
         # Traverse workflow and connect nodes
         nodes = workflow.roots()
@@ -234,10 +233,10 @@ class WorkflowWidget(QWidget):
             followers = workflow.followers_of(node)
 
             for follower in followers:
-                G.add_edge(node, follower)
+                graph.add_edge(node, follower)
                 nodes.append(follower)
 
-        return G
+        return graph
 
     def _draw_nx_graph(self, G):
 
