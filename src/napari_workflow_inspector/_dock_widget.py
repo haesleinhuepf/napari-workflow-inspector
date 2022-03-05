@@ -23,8 +23,8 @@ class ClickableNodes():
 
         self.invalid_color = [1, 0, 1, 1]
         self.valid_color = [0, 1, 0, 1]
-        self.ec_inactive = [0, 0, 0, 1]
-        self.ec_active = [1, 1, 1, 1]
+        self.unselected_edgecolor = [0, 0, 0, 1]
+        self.selected_edgecolor = [1, 1, 1, 1]
         self.viewer = viewer
         
         self.positions = positions
@@ -34,7 +34,7 @@ class ClickableNodes():
         self.canvas = canvas
         self.points = self.canvas.axes.scatter(self.x, self.y, picker=True, s=radius,
                                                facecolor=[self.valid_color] * len(self.x),
-                                               edgecolor=[self.ec_inactive] * len(self.x))
+                                               edgecolor=[self.unselected_edgecolor] * len(self.x))
         
         self.edgecolors = self.points.get_edgecolors()
         self.background = None
@@ -45,7 +45,7 @@ class ClickableNodes():
         """Turn this point on and off"""
         
         edgecolors = self.edgecolors.copy()
-        edgecolors[index] = self.ec_active
+        edgecolors[index] = self.selected_edgecolor
         self.points.set_edgecolors(edgecolors)
         self.canvas.draw()
         
@@ -144,18 +144,6 @@ class WorkflowWidget(QWidget):
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(tabs)
 
-        try:
-            import napari_script_editor
-            btn_generate_code = QPushButton("Generate code")
-            btn_export_workflow = QPushButton("Export workflow")
-
-            btn_generate_code.clicked.connect(self._generate_code)
-            btn_export_workflow.clicked.connect(self._export_code)
-            self.layout().addWidget(btn_generate_code)
-            self.layout().addWidget(btn_export_workflow)
-        except ImportError:
-            pass
-
         verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.layout().addItem(verticalSpacer)
 
@@ -230,30 +218,6 @@ class WorkflowWidget(QWidget):
 
 
         self.timer.start()
-
-    def _export_code(self):
-
-        fileName, _ = QFileDialog.getSaveFileName(self)
-
-        graph = {
-            'counter': self._counter,
-            'edges': self._edges,
-            'names': self._names,
-            'statii': self._statii}
-
-        with open(fileName, 'wb') as pickleobj:
-            pickle.dump(pickleobj, fileName)
-
-    def _generate_code(self):
-        from napari_workflows import WorkflowManager
-
-        complete_code = WorkflowManager.install(self._viewer).to_python_code()
-
-        print(complete_code)
-
-        import napari_script_editor
-        editor = napari_script_editor.ScriptEditor.get_script_editor_from_viewer(self._viewer)
-        editor.set_code(complete_code)
 
     def _create_nx_graph_from_workflow(self, workflow):
         """Consume a workflow object and return an directed nx graph"""
