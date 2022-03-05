@@ -172,7 +172,7 @@ class WorkflowWidget(QWidget):
                         if layer.name in roots:
                             status = "#dddddd"
                         elif _layer_invalid(layer):
-                            status = "#dd0000"
+                            status = "#dd00dd"
                         else:
                             status = "#00dd00"
 
