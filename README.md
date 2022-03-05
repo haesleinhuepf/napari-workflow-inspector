@@ -8,7 +8,7 @@
 [![Development Status](https://img.shields.io/pypi/status/napari-workflow-inspector.svg)](https://en.wikipedia.org/wiki/Software_release_life_cycle#Alpha)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-workflow-inspector)](https://napari-hub.org/plugins/napari-workflow-inspector)
 
-Inspect relationships between napari-plugins in active workflows. Open the inspector by clicking the menu `Tools > Visualization > Workflow Inspector`.
+Inspect relationships between image processing operations in active workflows in napari. Open the inspector by clicking the menu `Tools > Visualization > Workflow Inspector`.
 
 ![img_1.png](https://github.com/haesleinhuepf/napari-workflow-inspector/raw/main/docs/screenshot_graph.png)
 
@@ -20,22 +20,9 @@ to generate code from active workflows.
 For recording workflows, all napari image processing plugins that use the `@time_slicer` interface are supported. See
 [napari-time-slicer](https://www.napari-hub.org/plugins/napari-time-slicer) for a list. More to come, stay tuned.
 
-----------------------------------
-
-This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
-
 ## Installation
 
-Before installation, you may have to install the [cairo library](https://www.cairographics.org/) which is needed
-according to the installation instructions of the underlying [igraph library](https://igraph.org/python/doc/tutorial/install.html). 
-You can for example do that by downloading a wheel from [Christoph Gohlke's Website](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo) 
-and then running this command:
-
-```
-pip install pycairo-1.20.1-cp39-cp39-win_amd64.whl
-```
-
-Then, you can install `napari-workflow-inspector` via [pip]:
+You can install `napari-workflow-inspector` via [pip]:
 
 ```
 pip install napari-workflow-inspector
