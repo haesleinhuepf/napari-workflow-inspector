@@ -9,10 +9,7 @@ from napari_tools_menu import register_dock_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-import matplotlib
-matplotlib.use('Qt5Agg')
 
-import pickle
 import networkx as nx
 
 
