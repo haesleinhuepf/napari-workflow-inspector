@@ -111,7 +111,7 @@ class matplotlibWidget(QWidget):
         self.layout().addWidget(self.toolbar)
         self.layout().addWidget(self.canvas)
 
-@register_dock_widget(menu="Visualization > Workflow Inspector")
+@register_dock_widget(menu="Utilities > Workflow Inspector")
 class WorkflowWidget(QWidget):
 
     def __init__(self, napari_viewer):
