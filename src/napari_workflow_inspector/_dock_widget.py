@@ -130,12 +130,16 @@ class WorkflowWidget(QWidget):
         lbl_raw = QLabel("")
         scroll_area_raw = QScrollArea()
         scroll_area_raw.setWidget(lbl_raw)
+        lbl_undoredo = QLabel("")
+        scroll_area_undoredo = QScrollArea()
+        scroll_area_undoredo.setWidget(lbl_undoredo)
 
         tabs = QTabWidget()
         tabs.addTab(self.graphwidget, "Image data flow graph")
         tabs.addTab(lbl_from_roots, "From source")
         tabs.addTab(lbl_from_leafs, "From target")
         tabs.addTab(scroll_area_raw, "Raw")
+        tabs.addTab(scroll_area_undoredo, "Undo/redo")
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(tabs)
@@ -152,7 +156,8 @@ class WorkflowWidget(QWidget):
         def update_layer(*_):
             from napari_workflows import WorkflowManager
             from napari_workflows._workflow import _layer_invalid, _viewer_has_layer
-            workflow = WorkflowManager.install(napari_viewer).workflow
+            manager = WorkflowManager.install(napari_viewer)
+            workflow = manager.workflow
             roots = workflow.roots()
 
             self._counter = 0
@@ -212,6 +217,10 @@ class WorkflowWidget(QWidget):
             lbl_raw.setMinimumSize(1000, 1000)
             lbl_raw.setAlignment(Qt.AlignTop)
 
+            if hasattr(manager, "undo_redo_controller"):
+                lbl_undoredo.setText(undo_redo_history(manager.workflow, manager.undo_redo_controller))
+                lbl_undoredo.setMinimumSize(1000, 1000)
+                lbl_undoredo.setAlignment(Qt.AlignTop)
 
         self.timer.start()
 
@@ -268,6 +277,42 @@ class WorkflowWidget(QWidget):
                 else:
                     self.graph_drawing.validate(node, state='valid')
 
+
+def undo_redo_history(workflow, undo_redo_controller):
+    """
+    Retrieve undo/redo-history as human-readable text from a given Workflow and UndoRedoController
+    """
+    undo_stack = undo_redo_controller.undo_stack
+    redo_stack = undo_redo_controller.redo_stack[::-1]
+
+    num_undo = len(undo_stack)
+    num_redo = len(redo_stack)
+    history = [f"Undo ({num_undo})/ Redo({num_redo})"]
+    if len(undo_stack) > 0:
+        for a, b in zip(undo_stack[:-1],undo_stack[1:]):
+            history.append(compare_workflows(a, b))
+        history.append(compare_workflows(undo_stack[-1], workflow))
+    if len(redo_stack) > 0:
+        history.append("-------")
+        history.append(compare_workflows(workflow, redo_stack[0]))
+        for a, b in zip(redo_stack[:-1], redo_stack[1:]):
+            history.append(compare_workflows(a, b))
+    return "\n".join(history)
+
+
+def compare_workflows(a, b):
+    """
+    Compare two workflows and returns the result in a git-comparison-style text
+    """
+    import difflib
+    output = list(difflib.Differ().compare(str(a).split("\n"), str(b).split("\n")))
+
+    output = [o for o in output if o.startswith("+ ") or o.startswith("- ")]
+
+    if len(output) > 0:
+        output.append("")
+
+    return "\n".join(output)
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
