@@ -287,13 +287,13 @@ def undo_redo_history(workflow, undo_redo_controller):
 
     num_undo = len(undo_stack)
     num_redo = len(redo_stack)
-    history = [f"Undo ({num_undo})/ Redo({num_redo})"]
+    history = []
     if len(undo_stack) > 0:
         for a, b in zip(undo_stack[:-1],undo_stack[1:]):
             history.append(compare_workflows(a, b))
         history.append(compare_workflows(undo_stack[-1], workflow))
+    history.append(f"--- Undo ({num_undo}, above)/ Redo({num_redo}, below) ---")
     if len(redo_stack) > 0:
-        history.append("-------")
         history.append(compare_workflows(workflow, redo_stack[0]))
         for a, b in zip(redo_stack[:-1], redo_stack[1:]):
             history.append(compare_workflows(a, b))
