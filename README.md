@@ -28,6 +28,8 @@ You can install `napari-workflow-inspector` via [pip]:
 pip install napari-workflow-inspector
 ```
 
+Note: This plugin is not compatible with napari 0.6.0 or later.
+
 ## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
